@@ -41,14 +41,7 @@ async def during_survey(message:types.Message, bot:Bot):
     builder.row(types.InlineKeyboardButton(
         text="Опрос", url="https://forms.gle/hJ169RhnZMmtvSr39")
     )
-    res_master = cursor.execute("SELECT id FROM men")
-    ids = [x[0] for x in res_master.fetchall()]
-    res_master = cursor.execute("SELECT master FROM men")
-    users_master = [x[0] for x in res_master.fetchall()]
-    for i in range(len(ids)):
-        if users_master[i] == message.from_user.username:
-            print(ids[i])
-            await bot.send_message(chat_id=ids[i], text="Пройдите, пожалуйста, опрос до начала игры.\nРезультаты опроса помогут сделать игру качественнее для каждого игрока.", reply_markup=builder.as_markup(), parse_mode=ParseMode.HTML)
+
     await message.answer("Сделано!")
     await message.answer("Что будем делать дальше, <b>Мастер</b<?", reply_markup=keyboards.KeyboardM(), parse_mode=ParseMode.HTML)
 

@@ -6,22 +6,19 @@ def KeyboardStart():
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
 
-def KeyboardPlayer():
-    buttons = [[types.KeyboardButton(text="Роль")]]
-    keyboard = types.ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
-    return keyboard
 
 def KeyboardM():
     buttons = [[types.InlineKeyboardButton(text="‍👨Мои игроки👩‍🦱", callback_data="players")],
                [types.InlineKeyboardButton(text="➕Добавить/Удалить игрока➖", callback_data="add")],
                [types.InlineKeyboardButton(text="✉️Поделиться опросом✉", callback_data="share")],
                [types.InlineKeyboardButton(text="ℹ️Данные для следующей партииℹ️", callback_data="data")],
-               [types.InlineKeyboardButton(text="🍨Генерация картинок🍨", callback_data="gen_main")]]
+               [types.InlineKeyboardButton(text="🍨Генерация картинок🍨", callback_data="gen_main")],
+               [types.InlineKeyboardButton(text="Создание квеста", callback_data="quest_send")]]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
 
 def KeyboardP():
-    buttons = [[types.InlineKeyboardButton(text="Кнопка", callback_data="butt")]]
+    buttons = [[types.InlineKeyboardButton(text="🍨Генерация картинок🍨", callback_data="gen_main_p")]]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
 
@@ -77,13 +74,19 @@ def KeyboardBackMoreInfo():
     return keyboard
 
 def KeyboardBackMoreInfoWithoutEdit():
-    buttons = [[types.InlineKeyboardButton(text="◀️Назад", callback_data="back_more_info_we")]]
+    buttons = [[types.InlineKeyboardButton(text="◀️Назад", callback_data="back_more_info_we")],
+               [types.InlineKeyboardButton(text="Отправить игрокам", callback_data="send_players")],]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
 
 
 def KeyboardBackPlotInfo():
     buttons = [[types.InlineKeyboardButton(text="◀️Назад", callback_data="back_plot_info")]]
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
+    return keyboard
+
+def KeyboardBackPlayer():
+    buttons = [[types.InlineKeyboardButton(text="◀️Назад", callback_data="back_player")]]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
 

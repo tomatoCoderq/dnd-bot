@@ -24,6 +24,9 @@ async def back_more_info_we(callback: types.CallbackQuery):
 async def back_plot_info(callback: types.CallbackQuery):
     await callback.message.edit_text("Выберите действие:", reply_markup=keyboards.KeyboardStoryline())
 
+async def back_player(callback: types.CallbackQuery):
+    await callback.message.edit_text("Выберите действие:", reply_markup=keyboards.KeyboardP())
+
 
 async def help(message: types.Message):
     ans = '''В нашей системе существуют две роли: Мастер и Игрок.\n
@@ -64,4 +67,5 @@ def register_other_handler(dp: Dispatcher):
     dp.callback_query.register(back_plot_info, F.data == "back_plot_info")
     dp.callback_query.register(back_more_info, F.data == "back_more_info")
     dp.callback_query.register(back_more_info_we, F.data == "back_more_info_we")
+    dp.callback_query.register(back_player, F.data == "back_player")
     dp.message.register(help,  Command("help"))

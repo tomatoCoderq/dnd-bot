@@ -42,7 +42,7 @@ async def alias_adding(message: types.Message, state: FSMContext):
                 conn.commit()
                 await message.answer(f"<b>Дело сделано!</b>\nТеперь <i>{message.text}</i> в вашей комнате", parse_mode=ParseMode.HTML, reply_markup=keyboards.KeyboardM())
             elif message.text == users[i] and users_master[i] != message.from_user.username:
-                await message.answer("Этот игрок уже <b>привязан</b> к Мастеру. Попробуйте другой Alias!", reply_markup=keyboards.KeyboardBack())
+                await message.answer("Этот игрок уже <b>привязан</b> к Мастеру. Попробуйте другой Alias!", reply_markup=keyboards.KeyboardBack(), parse_mode=ParseMode.HTML)
                 return alias_adding
         await state.clear()
 

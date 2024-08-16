@@ -60,6 +60,26 @@ async def genZ(message:types.Message, state:FSMContext):
     await message.answer_photo(file, caption=f"{message.text}")
     await message.answer("Готово!", reply_markup=keyboards.KeyboardBack())
     await state.clear()
+
+
+@router.callback_query(F.data == "gen_main_p")
+async def ask_prompt(callback: types.CallbackQuery, state:FSMContext):
+    await callback.message.edit_text("Напишите ваш запрос")
+    await state.set_state(PromptState.waiting_prompt)
+
+
+@router.message(PromptState.waiting_prompt, F.text)
+async def genZ(message:types.Message, state:FSMContext):
+    await message.answer("Мы приняли ваш запрос. Ожидайте")
+    # try:
+    await generate(style='ANIME', width=1024, height=1024,
+                         query=message.text,
+                         file_name='image_p.png')
+    file = FSInputFile('image_p.png')
+
+    await message.answer_photo(file, caption=f"{message.text}")
+    await message.answer("Готово!", reply_markup=keyboards.KeyboardBackPlayer())
+    await state.clear()
     # except Kandinsky.:
     #     await message.edit_text("К сожалению, по данному запросу не возможно сгенерировать картинку. Попробуйте еще раз", reply_markup=keyboards.KeyboardBack())
     #     await state.clear()

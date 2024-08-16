@@ -1,5 +1,5 @@
 import sqlite3, googleapiclient, httplib2, asyncio, keyboards, pandas as pd
-from aiogram import F, Router, types, Dispatcher
+from aiogram import F, Router, types, Dispatcher, Bot
 import googleapiclient.discovery
 from aiogram.filters import ExceptionTypeFilter, state, Command
 from aiogram.fsm.context import FSMContext
@@ -9,13 +9,14 @@ from oauth2client.service_account import ServiceAccountCredentials
 from GPTAPI import *
 from aiogram.enums import ParseMode
 from openai import RateLimitError
+from openai import AuthenticationError
 
 from app.handlers.add_players import AliasState
 from app.handlers.gen_main import generate
 from aiohttp.client_exceptions import ClientConnectionError
 
 client = AsyncOpenAI(
-    api_key='sk-YjPnOdcxcW4myaU5on3f6LcIStlhszBZBhPsfwIXXGT3BlbkFJU4fU2uZ2mkhuAUQ0U1dRx5EeXKLxPPy9ahHmc0a7EA')
+    api_key='sk-l_OmX1EJmY2VBm3aBOa8BwcQkxBIsi7h8GqqaPgBHJT3BlbkFJyNmVT_grUsDz7k5SooevcP6hvCQDvenjAwxYm14Y4A')
 
 router = Router()
 conn = sqlite3.connect("database/databasetg.db")
@@ -24,6 +25,7 @@ Requestor = RequestAPI(client)
 
 global info
 global info_2
+global kand_input
 
 
 def get_service_sacc():
@@ -35,6 +37,8 @@ def get_service_sacc():
 async def make_a_choice(callback: types.CallbackQuery):
     await callback.message.edit_text("Выбирайте", reply_markup=keyboards.KeyboardCheck())
     await callback.answer()
+
+# <---------------------------------------------------------------------->
 
 
 async def checking_if_ready(callback: types.CallbackQuery):
@@ -77,9 +81,9 @@ async def checking_if_ready(callback: types.CallbackQuery):
             "К сожалению, еще <b>не все игроки</b> закончили проходить опрос\nВозвращайтесь попозже!",
             reply_markup=keyboards.KeyboardBackGetInfo(), parse_mode=ParseMode.HTML)
     else:
-        await callback.message.edit_text(
-            "Мы <b>получили</b> данные! Подождите <i>20 секунд</i>, идет обработка ответов", parse_mode=ParseMode.HTML)
         try:
+            await callback.message.edit_text(
+                "Мы <b>получили</b> данные! Подождите <i>20 секунд</i>, идет обработка ответов", parse_mode=ParseMode.HTML)
             info = pd.read_csv('res.csv').to_string()
             info = await Requestor.get_request(AnalyzeBF(), info)
             await asyncio.sleep(7)
@@ -89,10 +93,10 @@ async def checking_if_ready(callback: types.CallbackQuery):
             await asyncio.sleep(7)
             print("DONE info_2")
 
-            print(info_2)
             await callback.message.edit_text("<b>Ответы готовы!</b>\nПройдите назад и нажмите 🚪Открыть",
                                              reply_markup=keyboards.KeyboardBackGetInfo(), parse_mode=ParseMode.HTML)
-        except RateLimitError:
+        except (RateLimitError, AuthenticationError):
+            print("ok")
             await callback.message.edit_text("🛑К сожалению, произошла ошибка со стороны библиотеки OpenAI",reply_markup=keyboards.KeyboardBackGetInfo(), parse_mode=ParseMode.HTML)
 
 
@@ -110,7 +114,7 @@ async def salvation(message: types.Message):
     res_user = cursor.execute("SELECT user FROM men")
     users = [x[0] for x in res_user.fetchall()]
 
-    myusers = [users[i] for i in range(len(users)) if users_master[i] == callback.from_user.username]
+    myusers = [users[i] for i in range(len(users)) if users_master[i] == message.from_user.username]
     print(myusers)
 
     answer = []
@@ -121,7 +125,7 @@ async def salvation(message: types.Message):
                 answer.append(ans)
     length = len(answer)
     print(length, resp['values'])
-    await message.edit_text("Мы <b>получили</b> данные! Подождите <i>20 секунд</i>, идет обработка ответов", parse_mode=ParseMode.HTML)
+    await message.answer("Мы <b>получили</b> данные! Подождите <i>20 секунд</i>, идет обработка ответов", parse_mode=ParseMode.HTML)
 
     try:
         info = pd.read_csv('res.csv').to_string()
@@ -136,8 +140,10 @@ async def salvation(message: types.Message):
         print(info_2)
         await message.edit_text("<b>Ответы готовы!</b>\nПройдите назад и нажмите 🚪Открыть",
                                          reply_markup=keyboards.KeyboardBackGetInfo(), parse_mode=ParseMode.HTML)
-    except RateLimitError:
+    except RateLimitError or AuthenticationError:
         await message.edit_text("🛑К сожалению, произошла ошибка со стороны библиотеки OpenAI",reply_markup=keyboards.KeyboardBackGetInfo(), parse_mode=ParseMode.HTML)
+
+# <---------------------------------------------------------------------->
 
 
 async def choosing_type_survey(callback: types.CallbackQuery):
@@ -193,6 +199,7 @@ async def ending(callback: types.CallbackQuery):
 
 class LocState(StatesGroup):
     waiting_location = State()
+    waiting_agree = State()
 
 
 @router.callback_query(F.data == "locations")
@@ -201,6 +208,7 @@ async def locations(callback: types.CallbackQuery, state: FSMContext):
         ans = ""
         for end in info_2.locations:
             ans += f"|<b>{end.name}</b>\n {end.description}\n\n"
+        ans += "-----------------------------------------------------\n\n"
         ans += f"<b>Если вы хотите увидеть более подробную информацию о локации, а также ее изображение, напишите <i>название</i> локации</b>\n"
         await callback.message.edit_text(ans, reply_markup=keyboards.KeyboardBackMoreInfo(), parse_mode=ParseMode.HTML)
         await state.set_state(LocState.waiting_location)
@@ -209,9 +217,9 @@ async def locations(callback: types.CallbackQuery, state: FSMContext):
         await callback.answer()
 
 
-
 @router.message(LocState.waiting_location, F.text)
 async def location_sending(message: types.Message, state: FSMContext):
+    global kand_input
     locs = [loc.name for loc in info_2.locations]
     print(locs)
     if message.text in locs:
@@ -223,25 +231,45 @@ async def location_sending(message: types.Message, state: FSMContext):
                 print(kand_input)
                 await generate(style='ANIME', width=1024, height=1024,
                                query=f"{kand_input.kandinsky_appearance}. Stylized: stained glass, watercolor.",
-                               file_name='image3.png')
-                file = FSInputFile('image3.png')
+                               file_name='imagel.png')
+                file = FSInputFile('imagel.png')
                 ans = f"<b>{kand_input.name}</b>\n\n"
                 ans += f"{kand_input.appearance}\n\n"
                 await message.answer_photo(file, caption=ans,
                                                     reply_markup=keyboards.KeyboardBackMoreInfoWithoutEdit(),
                                                     parse_mode=ParseMode.HTML)
+                await state.set_state(LocState.waiting_agree)
+
     else:
         await message.answer("Такой локации нет", reply_markup=keyboards.KeyboardBackMoreInfo(),
                                       parse_mode=ParseMode.HTML)
         return location_sending
+
+
+@router.callback_query(LocState.waiting_agree, F.data == "send_players")
+async def location_agree(message: types.Message, bot:Bot, state: FSMContext):
+    res_master = cursor.execute("SELECT id FROM men")
+    ids = [x[0] for x in res_master.fetchall()]
+
+    res_master = cursor.execute("SELECT master FROM men")
+    users_master = [x[0] for x in res_master.fetchall()]
+
+    file = FSInputFile('imagel.png')
+    ans = f"<b>{kand_input.name}</b>\n\n"
+    ans += f"{kand_input.appearance}\n\n"
+
+    for i in range(len(ids)):
+        if users_master[i] == message.from_user.username:
+            print(ids[i])
+            await bot.send_photo(chat_id=ids[i], caption=ans, parse_mode=ParseMode.HTML, photo=file)
+    await bot.send_message(chat_id=message.from_user.id, text="Игроки получили карточку локации", reply_markup=keyboards.KeyboardBackMoreInfo(), parse_mode=ParseMode.HTML)
     await state.clear()
-
-
 # <---------------------------------------------------------------------->
 
 
 class NpcMoreState(StatesGroup):
     waiting_npc = State()
+    waiting_agree = State()
 
 
 @router.callback_query(F.data == "npcs")
@@ -265,6 +293,7 @@ async def npcs(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(NpcMoreState.waiting_npc, F.text)
 async def npc_sending(message: types.Message, state: FSMContext):
+    global kand_input
     npcs = [char.name for char in info_2.npcs]
     print(npcs)
     if message.text in npcs:
@@ -289,19 +318,39 @@ async def npc_sending(message: types.Message, state: FSMContext):
                 await message.answer_photo(file, caption=ans,
                                                     reply_markup=keyboards.KeyboardBackMoreInfoWithoutEdit(),
                                                     parse_mode=ParseMode.HTML)
+                await state.set_state(NpcMoreState.waiting_agree)
     else:
         # print('none')
         await message.answer("Такого персонажа нет", reply_markup=keyboards.KeyboardBackMoreInfo(),
                                       parse_mode=ParseMode.HTML)
         return npc_sending
-    await state.clear()
 
+
+@router.callback_query(NpcMoreState.waiting_agree, F.data == "send_players")
+async def npc_agree(message: types.Message, bot:Bot, state: FSMContext):
+    res_master = cursor.execute("SELECT id FROM men")
+    ids = [x[0] for x in res_master.fetchall()]
+
+    res_master = cursor.execute("SELECT master FROM men")
+    users_master = [x[0] for x in res_master.fetchall()]
+
+    file = FSInputFile('image2.png')
+    ans = f"<b>{kand_input.name}</b>\n\n"
+    ans += f"{kand_input.appearance}\n\n"
+
+    for i in range(len(ids)):
+        if users_master[i] == message.from_user.username:
+            print(ids[i])
+            await bot.send_photo(chat_id=ids[i], caption=ans, parse_mode=ParseMode.HTML, photo=file)
+    await bot.send_message(chat_id=message.from_user.id, text="Игроки получили карточку персонажа", reply_markup=keyboards.KeyboardBackMoreInfo(), parse_mode=ParseMode.HTML)
+    await state.clear()
 
 # <---------------------------------------------------------------------->
 
 
 class EnemyState(StatesGroup):
     waiting_enemy = State()
+    waiting_agree = State()
 
 
 @router.callback_query(F.data == "enemies")
@@ -320,6 +369,7 @@ async def enemies(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(EnemyState.waiting_enemy, F.text)
 async def enemy_sending(message: types.Message, state: FSMContext):
+    global kand_input
     enemies = [char.name for char in info_2.enemies]
     print(enemies)
     if message.text in enemies:
@@ -343,18 +393,38 @@ async def enemy_sending(message: types.Message, state: FSMContext):
                     ans += f"-<i>{phr.theme}</i>. {phr.phrase}\n\n"
                 await message.answer_photo(file, caption=ans, reply_markup=keyboards.KeyboardBackMoreInfoWithoutEdit(),
                                            parse_mode=ParseMode.HTML)
+                await state.set_state(EnemyState.waiting_agree)
     else:
         await message.answer("Такого персонажа нет", reply_markup=keyboards.KeyboardBackMoreInfo(),
                              parse_mode=ParseMode.HTML)
         return enemy_sending
-    await state.clear()
 
+
+@router.callback_query(EnemyState.waiting_agree, F.data == "send_players")
+async def enemy_agree(message: types.Message, bot:Bot, state: FSMContext):
+    res_master = cursor.execute("SELECT id FROM men")
+    ids = [x[0] for x in res_master.fetchall()]
+
+    res_master = cursor.execute("SELECT master FROM men")
+    users_master = [x[0] for x in res_master.fetchall()]
+
+    file = FSInputFile('image3.png')
+    ans = f"<b>{kand_input.name}</b>\n\n"
+    ans += f"{kand_input.appearance}\n\n"
+
+    for i in range(len(ids)):
+        if users_master[i] == message.from_user.username:
+            print(ids[i])
+            await bot.send_photo(chat_id=ids[i], caption=ans, parse_mode=ParseMode.HTML, photo=file)
+    await bot.send_message(chat_id=message.from_user.id, text="Игроки получили карточку персонажа", reply_markup=keyboards.KeyboardBackMoreInfo(), parse_mode=ParseMode.HTML)
+    await state.clear()
 
 # <---------------------------------------------------------------------->
 
 
 class BH_State(StatesGroup):
     waiting_bh = State()
+    waiting_agree = State()
 
 
 @router.callback_query(F.data == "bosses_heroes")
@@ -373,6 +443,7 @@ async def bosses_heroes(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(BH_State.waiting_bh, F.text)
 async def bh_sending(message: types.Message, state: FSMContext):
+    global kand_input
     bh = [char.name for char in info_2.bosses_heroes]
     print(bh)
     if message.text in bh:
@@ -396,13 +467,31 @@ async def bh_sending(message: types.Message, state: FSMContext):
                     ans += f"-<i>{phr.theme}</i>. {phr.phrase}\n\n"
                 await message.answer_photo(file, caption=ans, reply_markup=keyboards.KeyboardBackMoreInfoWithoutEdit(),
                                            parse_mode=ParseMode.HTML)
+                await state.set_state(BH_State.waiting_agree)
     else:
         await message.answer("Такого персонажа нет", reply_markup=keyboards.KeyboardBackMoreInfo(),
                              parse_mode=ParseMode.HTML)
         return bh_sending
+
+
+@router.callback_query(BH_State.waiting_agree, F.data == "send_players")
+async def bh_agree(message: types.Message, bot:Bot, state: FSMContext):
+    res_master = cursor.execute("SELECT id FROM men")
+    ids = [x[0] for x in res_master.fetchall()]
+
+    res_master = cursor.execute("SELECT master FROM men")
+    users_master = [x[0] for x in res_master.fetchall()]
+
+    file = FSInputFile('image4.png')
+    ans = f"<b>{kand_input.name}</b>\n\n"
+    ans += f"{kand_input.appearance}\n\n"
+
+    for i in range(len(ids)):
+        if users_master[i] == message.from_user.username:
+            print(ids[i])
+            await bot.send_photo(chat_id=ids[i], caption=ans, parse_mode=ParseMode.HTML, photo=file)
+    await bot.send_message(chat_id=message.from_user.id, text="Игроки получили карточку персонажа", reply_markup=keyboards.KeyboardBackMoreInfo(), parse_mode=ParseMode.HTML)
     await state.clear()
-
-
 # <---------------------------------------------------------------------->
 
 
@@ -430,6 +519,10 @@ async def more_info(callback: types.CallbackQuery):
     except NameError:
         await callback.message.edit_text(f"<b>Не пытайтесь обмануть систему! Сперва сформируйте ответ</b>", reply_markup=keyboards.KeyboardBackMoreInfo(), parse_mode=ParseMode.HTML)
     await callback.answer()
+
+
+# async def send_players(bot: Bot, callback: types.CallbackQuery):
+
 
 
 def register_info_handler(dp: Dispatcher):
