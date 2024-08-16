@@ -43,7 +43,7 @@ recommendations_quick_quest = Template(recommendations_quick_quest_str)
 
 recommendations_about_character_str = '''
 Вот структура ответа:
-- type: раса персонажа. $type_indication
+- type: раса персонажа. значение должно быть взято из параметра type входных данных. $type_indication
 - gender: пол персонажа выбранный и следующего списка [Мужской, Женский, Бесполый]
 - name: имя персонажа. $name_indication
 - appearance: подробное описание внешнего вида персонажа. $appearance_indication
