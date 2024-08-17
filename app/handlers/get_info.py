@@ -11,14 +11,16 @@ from aiogram.enums import ParseMode
 from openai import RateLimitError
 from openai import AuthenticationError
 from aiogram.exceptions import TelegramNetworkError
+from openai import PermissionDeniedError
 
 from app.handlers.add_players import AliasState
 from app.handlers.gen_main import generate
 from aiohttp.client_exceptions import ClientConnectionError
 import random
+from config.config import *
 
 client = AsyncOpenAI(
-    api_key='sk-0fv7PniX8pgX55qgK2XTM464KVptdOj4XIGVzTymvtT3BlbkFJDnIE3c2Bf88FgzrCUXIoUDWL7nDPZilhjEPPsIU1QA')
+    api_key=api_key)
 
 router = Router()
 conn = sqlite3.connect("database/databasetg.db")
@@ -74,7 +76,7 @@ async def checking_if_ready(callback: types.CallbackQuery):
     users_master = [x[0] for x in res_master.fetchall()]
 
     k = 0
-
+    print("ok")
     for master in users_master:
         if master == callback.from_user.username:
             k += 1
@@ -84,6 +86,7 @@ async def checking_if_ready(callback: types.CallbackQuery):
             "К сожалению, еще <b>не все игроки</b> закончили проходить опрос\nВозвращайтесь попозже!",
             reply_markup=keyboards.KeyboardBackGetInfo(), parse_mode=ParseMode.HTML)
     else:
+        print("ok1")
         try:
             await callback.message.edit_text(
                 "Мы <b>получили</b> данные! Подождите <i>20 секунд</i>, идет обработка ответов", parse_mode=ParseMode.HTML)
@@ -98,7 +101,7 @@ async def checking_if_ready(callback: types.CallbackQuery):
 
             await callback.message.edit_text("<b>Ответы готовы!</b>\nПройдите назад и нажмите 🚪Открыть",
                                              reply_markup=keyboards.KeyboardBackGetInfo(), parse_mode=ParseMode.HTML)
-        except (RateLimitError, AuthenticationError, TelegramNetworkError) as e:
+        except (RateLimitError, AuthenticationError, TelegramNetworkError, PermissionDeniedError) as e:
             print(e)
             await callback.message.edit_text("🛑К сожалению, произошла ошибка со стороны библиотеки OpenAI. Попробуйте снова",reply_markup=keyboards.KeyboardBackGetInfo(), parse_mode=ParseMode.HTML)
 
