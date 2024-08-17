@@ -43,11 +43,13 @@ recommendations_quick_quest = Template(recommendations_quick_quest_str)
 
 recommendations_about_character_str = '''
 Вот структура ответа:
-- type: раса персонажа. значение должно быть взято из параметра type входных данных. $type_indication
+- type: раса персонажа. $type_indication
 - gender: пол персонажа выбранный и следующего списка [Мужской, Женский, Бесполый]
 - name: имя персонажа. $name_indication
 - appearance: подробное описание внешнего вида персонажа. $appearance_indication
-- kandinsky_appearance: описание изображения верхней части тела персонажа, с упоминанием значений параметров type, gender, но без упоминания парметра name, основанное на параметре appearance в одном предложении. Указание: Необходимо описать фон, на котором находится персонаж. Указание: kandinsky_appearance должен быть написан на английском языке.- description: описание персонажа и его роли внутри игры. $description_indication
+- kandinsky_appearance: описание изображения верхней части тела персонажа, с упоминанием значений параметров type, gender, но без упоминания парметра name, основанное на параметре appearance в одном предложении. Указание: Необходимо описать фон, на котором находится персонаж. Указание: kandinsky_appearance должен быть написан на английском языке.
+- personality: список качеств персонажа с большой буквы. $personality_indication
+- description: описание персонажа и его роли внутри игры. $description_indication
 - phrases: список фраз с их тематикой (тематика с маленькой буквы) и самой фразой, стилизованной под персонажа. $phrases_indication
 '''
 recommendations_about_character = Template(recommendations_about_character_str)

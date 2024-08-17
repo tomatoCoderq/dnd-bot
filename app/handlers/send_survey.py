@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.enums import ParseMode
 
+
 import keyboards
 
 conn = sqlite3.connect("database/databasetg.db")
@@ -31,24 +32,35 @@ async def before_survey(callback:types.CallbackQuery, bot:Bot):
     for i in range(len(ids)):
         if users_master[i] == callback.from_user.username:
             print(ids[i])
-            await bot.send_message(chat_id=ids[i], text="Пройдите, пожалуйста, опрос <b>до начала игры</b>.\nРезультаты опроса помогут сделать игру качественнее для каждого игрока.", reply_markup=builder.as_markup())
+            await bot.send_message(chat_id=ids[i], text="Пройдите, пожалуйста, опрос <b>до начала игры</b>.\nРезультаты опроса помогут сделать игру качественнее для каждого игрока.", reply_markup=builder.as_markup(), parse_mode=ParseMode.HTML)
     await callback.answer("Сделано!")
     await callback.message.edit_text("Что будем делать дальше, <b>Мастер</b>?", reply_markup=keyboards.KeyboardM())
 
 
-async def during_survey(message:types.Message, bot:Bot):
-    builder = InlineKeyboardBuilder()
-    builder.row(types.InlineKeyboardButton(
-        text="Опрос", url="https://forms.gle/hJ169RhnZMmtvSr39")
+async def during_survey(callback:types.CallbackQuery, bot:Bot):
+    builder_d = InlineKeyboardBuilder()
+    builder_d.row(types.InlineKeyboardButton(
+        text="Опрос", url="https://forms.gle/81vPhbsgnfyBZL84A")
     )
 
-    await message.answer("Сделано!")
-    await message.answer("Что будем делать дальше, <b>Мастер</b<?", reply_markup=keyboards.KeyboardM(), parse_mode=ParseMode.HTML)
+    res_master = cursor.execute("SELECT id FROM men")
+    ids = [x[0] for x in res_master.fetchall()]
+    res_master = cursor.execute("SELECT master FROM men")
+    users_master = [x[0] for x in res_master.fetchall()]
+
+    for i in range(len(ids)):
+        if users_master[i] == callback.from_user.username:
+            print(ids[i])
+            await bot.send_message(chat_id=ids[i], text="Пройдите, пожалуйста, опрос.\nРезультаты опроса помогут сделать игру качественнее для каждого игрока.", reply_markup=builder_d.as_markup(), parse_mode=ParseMode.HTML)
+
+
+    await callback.answer("Сделано!")
+    await callback.message.answer("Что будем делать дальше, <b>Мастер</b>?", reply_markup=keyboards.KeyboardM(), parse_mode=ParseMode.HTML)
 
 async def after_survey(message:types.Message, bot:Bot):
     builder = InlineKeyboardBuilder()
     builder.row(types.InlineKeyboardButton(
-        text="Опрос", url="https://forms.gle/6hmE5hcddqwSRBGZ7")
+        text="Опрос", url="https://forms.gle/m1hFQom8G8jmSbwK7")
     )
     res_master = cursor.execute("SELECT id FROM men")
     ids = [x[0] for x in res_master.fetchall()]
@@ -59,7 +71,7 @@ async def after_survey(message:types.Message, bot:Bot):
             print(ids[i])
             await bot.send_message(chat_id=ids[i], text="Пройдите опрос бро", reply_markup=builder.as_markup())
     await message.answer("Сделано!")
-    await message.edit_text("Что будем делать дальше, Мастер?", reply_markup=keyboards.KeyboardM(), parse_mode=ParseMode.HTML)
+    await message.edit_text("Что будем делать дальше, <b>Мастер?</b>", reply_markup=keyboards.KeyboardM(), parse_mode=ParseMode.HTML)
 
 def register_survey_handler(dp: Dispatcher):
     dp.callback_query.register(choosing_type_survey, F.data=="share")

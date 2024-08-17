@@ -14,6 +14,7 @@ from app.handlers.other import register_other_handler
 from app.handlers import gen_main
 from app.handlers.get_info import register_info_handler
 from app.handlers import get_info
+# from app.handlers.quest_send import register_quest_handler
 
 
 
@@ -44,6 +45,7 @@ async def main():
     register_start_handler(dp)
     register_list_handler(dp)
     register_survey_handler(dp)
+    # register_quest_handler(dp)
     register_other_handler(dp)
     await dp.start_polling(bot)
 

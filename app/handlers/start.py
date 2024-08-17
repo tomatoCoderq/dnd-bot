@@ -32,7 +32,7 @@ async def add_master(callback: types.CallbackQuery):
     cursor.execute("INSERT INTO men VALUES (?, ?, ?, ?)", add)
     conn.commit()
 
-    await callback.message.edit_text("Хороших вам партий, <b>Мастер!</b>", reply_markup=keyboards.KeyboardM())
+    await callback.message.edit_text("Хороших вам партий, <b>Мастер!</b>", reply_markup=keyboards.KeyboardM(), parse_mode=ParseMode.HTML)
     await callback.answer()
 
 

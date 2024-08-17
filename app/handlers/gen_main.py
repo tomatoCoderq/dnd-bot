@@ -5,6 +5,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import FSInputFile
 from KandinskyAPI import FusionBrainApi, ApiApi
+from aiohttp.client_exceptions import ClientConnectionError
+from aiogram.enums import ParseMode
 
 conn = sqlite3.connect("database/databasetg.db")
 cursor = conn.cursor()
@@ -51,15 +53,18 @@ async def ask_prompt(callback: types.CallbackQuery, state:FSMContext):
 @router.message(PromptState.waiting_prompt, F.text)
 async def genZ(message:types.Message, state:FSMContext):
     await message.answer("Мы приняли ваш запрос. Ожидайте")
-    # try:
-    await generate(style='ANIME', width=1024, height=1024,
-                         query=message.text,
-                         file_name='image.png')
-    file = FSInputFile('image.png')
+    try:
+        await generate(style='ANIME', width=1024, height=1024,
+                             query=message.text,
+                             file_name='image.png')
+        file = FSInputFile('image.png')
 
-    await message.answer_photo(file, caption=f"{message.text}")
-    await message.answer("Готово!", reply_markup=keyboards.KeyboardBack())
-    await state.clear()
+        await message.answer_photo(file, caption=f"{message.text}")
+        await message.answer("Готово!", reply_markup=keyboards.KeyboardBack())
+        await state.clear()
+    except ClientConnectionError as e:
+        await message.answer("<b>Произошла ошибка!</b> Попробуйте еще раз", reply_markup=keyboards.KeyboardBack(), parse_mode=ParseMode.HTML)
+        return ask_prompt
 
 
 @router.callback_query(F.data == "gen_main_p")
@@ -71,15 +76,18 @@ async def ask_prompt(callback: types.CallbackQuery, state:FSMContext):
 @router.message(PromptState.waiting_prompt, F.text)
 async def genZ(message:types.Message, state:FSMContext):
     await message.answer("Мы приняли ваш запрос. Ожидайте")
-    # try:
-    await generate(style='ANIME', width=1024, height=1024,
-                         query=message.text,
-                         file_name='image_p.png')
-    file = FSInputFile('image_p.png')
+    try:
+        await generate(style='ANIME', width=1024, height=1024,
+                             query=message.text,
+                             file_name='image_p.png')
+        file = FSInputFile('image_p.png')
 
-    await message.answer_photo(file, caption=f"{message.text}")
-    await message.answer("Готово!", reply_markup=keyboards.KeyboardBackPlayer())
-    await state.clear()
+        await message.answer_photo(file, caption=f"{message.text}")
+        await message.answer("Готово!", reply_markup=keyboards.KeyboardBackPlayer())
+        await state.clear()
+    except ClientConnectionError as e:
+        await message.answer("<b>Произошла ошибка!</b> Попробуйте еще раз", reply_markup=keyboards.KeyboardBack(), parse_mode=ParseMode.HTML)
+        return ask_prompt
     # except Kandinsky.:
     #     await message.edit_text("К сожалению, по данному запросу не возможно сгенерировать картинку. Попробуйте еще раз", reply_markup=keyboards.KeyboardBack())
     #     await state.clear()
