@@ -20,7 +20,7 @@ import random
 from config.config import *
 
 client = AsyncOpenAI(
-    api_key=api_key)
+    api_key=apiKey)
 
 router = Router()
 conn = sqlite3.connect("database/databasetg.db")
