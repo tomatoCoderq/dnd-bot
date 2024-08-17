@@ -1,3 +1,4 @@
 To start a project
     pip install -r requirements.txt
     python main.py
+inside config/config.py put you api-key
