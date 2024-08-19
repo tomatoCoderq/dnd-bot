@@ -1,4 +1,54 @@
-To start a project
+# DnD Project
+
+## Overview
+
+This project is a Dungeons & Dragons (DnD) application that provides various features such as character management, gameplay assistance, and possibly integrations with AI for enhanced user experience. The project includes different modules, scripts, and APIs to support these functionalities.
+
+## Features
+
+- **Character Management**: Tools for creating, updating, and managing DnD characters.
+- **Gameplay Assistance**: Features to assist during gameplay, such as NPC management, enemy handling, etc.
+- **AI Integration**: Uses APIs like GPT and Kandinsky for generating creative content or managing game logic.
+
+## Project Structure
+
+- **main.py**: The main entry point for the application.
+- **database/**: Contains data storage files or databases used by the application.
+- **config/**: Configuration files for setting up the application.
+- **app/**: Core application files and logic.
+- **GPTAPI/**: API interactions with GPT models for generating content.
+- **KandinskyAPI/**: API interactions with Kandinsky, possibly for generating images or other creative content.
+- **keyboards.py**: Contains logic related to keyboard input or custom keyboard layouts.
+- **logs.log**: A log file for tracking application activity and errors.
+
+## Usage
+- **GPTAPI**: We use standard constructions from OpenAI library.
+- **KandinskyAPI**: We use standard constructions from FusionBrain documentation and asyncKandinsky.
+- **GoogleSheetAPI**: We use standard constructions from GoogleSheetAPI documentation, including additional functions from googleapiclient.
+
+
+## Setup Instructions
+
+### Prerequisites
+
+- **Python 3.9** or higher
+- **pip** (Python package installer)
+
+### Installation
+
+1. Clone the repository:
+   git clone https://github.com/yourusername/DnD.git
+   cd DnD
+
+2. Setup the environment:
+    python3 -m venv venv
+    source venv/bin/activate   # On Windows: venv\Scripts\activate
+
+3. Download Requirements:
     pip install -r requirements.txt
+
+4. Configuration:
+    Ensure the configuration files in the config/ directory are correctly set up according to your environment.
+
+5. Starting:
     python main.py
-inside config/config.py put you api-key
