@@ -26,7 +26,7 @@ def KeyboardP():
 def KeyboardSurvey():
     buttons = [[types.InlineKeyboardButton(text="🌆️Опрос перед игрой", callback_data="before")],
                [types.InlineKeyboardButton(text="🏙Опрос в течение игры", callback_data="during")],
-               [types.InlineKeyboardButton(text="🌃Опрос после игры", callback_data="after")],
+               # [types.InlineKeyboardButton(text="🌃Опрос после игры", callback_data="after")],
                [types.InlineKeyboardButton(text="◀️Назад", callback_data="back")]]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
@@ -124,10 +124,5 @@ def KeyboardBackMoreInfoWithoutEditQuest():
                [types.InlineKeyboardButton(text="📬Отправить игрокам", callback_data="send_players")],]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
-# def reports_inline_keyboard():
-#     keyboard = types.InlineKeyboardMarkup(row_width=1)
-#     buttons = [types.InlineKeyboardButton('Отчет за день', callback_data='b1'), types.InlineKeyboardButton('Отчет за неделю', callback_data='b2'),
-#                types.InlineKeyboardButton('Отчет за месяц', callback_data='b3')]
-#     keyboard.add(*buttons)
-#     return keyboard
+
 

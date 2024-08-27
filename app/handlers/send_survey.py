@@ -3,38 +3,51 @@ import sqlite3
 from aiogram import Dispatcher
 from aiogram import types
 from aiogram import Bot
-from aiogram.filters import Command, state, StateFilter
-from aiogram import F, Router
+from aiogram import F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
 from aiogram.enums import ParseMode
-
-
-import keyboards
+from utilits import keyboards, remove
+from loguru import logger
 
 conn = sqlite3.connect("database/databasetg.db")
 cursor = conn.cursor()
+logger.info("connected to databasetg.db in send_survey.py")
+
 
 async def choosing_type_survey(callback:types.CallbackQuery, bot:Bot):
     await callback.message.edit_text("Какой опрос вы хотите отправить?", reply_markup=keyboards.KeyboardSurvey())
     await callback.answer()
 
+
 async def before_survey(callback:types.CallbackQuery, bot:Bot):
+
     builder = InlineKeyboardBuilder()
     builder.row(types.InlineKeyboardButton(
         text="Опрос", url="https://forms.gle/hJ169RhnZMmtvSr39")
     )
-    res_master = cursor.execute("SELECT id FROM men")
-    ids = [x[0] for x in res_master.fetchall()]
-    res_master = cursor.execute("SELECT master FROM men")
-    users_master = [x[0] for x in res_master.fetchall()]
+
+    ids = [x[0] for x in cursor.execute("SELECT id FROM men").fetchall()]
+    users_master = [x[0] for x in cursor.execute("SELECT master FROM men").fetchall()]
+    users = [x[0] for x in cursor.execute("SELECT user FROM men").fetchall()]
+    roles = [x[0] for x in cursor.execute("SELECT title FROM men").fetchall()]
+
+
     for i in range(len(ids)):
         if users_master[i] == callback.from_user.username:
-            print(ids[i])
-            await bot.send_message(chat_id=ids[i], text="Пройдите, пожалуйста, опрос <b>до начала игры</b>.\nРезультаты опроса помогут сделать игру качественнее для каждого игрока.", reply_markup=builder.as_markup(), parse_mode=ParseMode.HTML)
+            print(f"{ids[i]}", callback.from_user.id)
+            await bot.send_message(chat_id=f"{ids[i]}", text="Пройдите, пожалуйста, опрос <b>до начала игры</b>.\nРезультаты опроса помогут сделать игру качественнее для каждого игрока.", reply_markup=builder.as_markup(), parse_mode=ParseMode.HTML)
+            logger.success(f"Sending to {ids[i]} survey before game")
+
+    for i in range(len(users)):
+        if users[i] == callback.from_user.username and roles[i] == 'master':
+            for j in range(len(users)):
+                if users_master[j] == callback.from_user.username:
+                    print(users[j])
+                    remove.delete_answers(users[j], "ответы")
+                    logger.success(f"Deleting previous answers of {users[j]} before game")
+
     await callback.answer("Сделано!")
-    await callback.message.edit_text("Что будем делать дальше, <b>Мастер</b>?", reply_markup=keyboards.KeyboardM())
+    await callback.message.edit_text("Что будем делать дальше, <b>Мастер</b>?", reply_markup=keyboards.KeyboardM(), parse_mode=ParseMode.HTML)
 
 
 async def during_survey(callback:types.CallbackQuery, bot:Bot):
@@ -43,15 +56,23 @@ async def during_survey(callback:types.CallbackQuery, bot:Bot):
         text="Опрос", url="https://forms.gle/81vPhbsgnfyBZL84A")
     )
 
-    res_master = cursor.execute("SELECT id FROM men")
-    ids = [x[0] for x in res_master.fetchall()]
-    res_master = cursor.execute("SELECT master FROM men")
-    users_master = [x[0] for x in res_master.fetchall()]
+    ids = [x[0] for x in cursor.execute("SELECT id FROM men").fetchall()]
+    users_master = [x[0] for x in cursor.execute("SELECT master FROM men").fetchall()]
+    users = [x[0] for x in cursor.execute("SELECT user FROM men").fetchall()]
+    roles = [x[0] for x in cursor.execute("SELECT title FROM men").fetchall()]
 
     for i in range(len(ids)):
         if users_master[i] == callback.from_user.username:
-            print(ids[i])
             await bot.send_message(chat_id=ids[i], text="Пройдите, пожалуйста, опрос.\nРезультаты опроса помогут сделать игру качественнее для каждого игрока.", reply_markup=builder_d.as_markup(), parse_mode=ParseMode.HTML)
+            logger.success(f"Sending to {ids[i]} survey during the game")
+
+    for i in range(len(users)):
+        if users[i] == callback.from_user.username and roles[i] == 'master':
+            for j in range(len(users)):
+                if users_master[j] == callback.from_user.username:
+                    print(users[j])
+                    remove.delete_answers(users[j], "ответы_игры")
+                    logger.success(f"Deleting previous answers of {users[j]} during game")
 
 
     await callback.answer("Сделано!")
